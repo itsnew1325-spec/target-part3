@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語帳 Section 16-19</title>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --sheet-color: rgba(255, 0, 0, 0.99); 
+        }
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding-bottom: 100px;
+            user-select: none;
+            letter-spacing: 0.05em;
+        }
+
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            z-index: 10002;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #3498db;
+            transition: width 0.2s;
+        }
+
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            padding: 10px; 
+        }
+
+        .sticky-header {
+            position: sticky;
+            top: 6px;
+            background: var(--bg-color);
+            z-index: 1000;
+            padding: 10px;
+            border-bottom: 2px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header-inner {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .speed-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.05);
+            padding: 8px;
+            border-radius: 10px;
+        }
+        .shuffle-panel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .shuffle-btn {
+            padding: 6px 15px;
+            border-radius: 20px;
+            border: 1px solid #3498db;
+            background: white;
+            color: #3498db;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+        }
+        .shuffle-btn.active { background: #3498db; color: white; }
+
+        .speed-control-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+        .speed-display { font-weight: bold; min-width: 70px; text-align: center; font-size: 0.9em; }
+        .stop-btn { padding: 6px 12px; border-radius: 8px; border: 2px solid #e74c3c; background: white; color: #e74c3c; font-weight: bold; cursor: pointer; }
+        .stop-btn.active { background: #e74c3c; color: white; }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 5px 0;
+            justify-content: center;
+        }
+        .tab-btn {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+        .tab-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); table-layout: fixed; }
+        th, td { border: 1px solid var(--border-color); padding: 16px 10px; text-align: left; overflow: hidden; }
+        th { background: #34495e; color: white; font-size: 0.9em; text-align: center; }
+
+        .word-no { color: #888; font-size: 0.8em; margin-right: 5px; display: inline-block; width: 35px; }
+        .word-eng { font-weight: bold; cursor: pointer; font-size: 1.1em; }
+        .word-jp { color: #ff0000 !important; font-weight: bold; filter: contrast(200%); }
+        
+        .fav-star { cursor: pointer; color: #ccc; font-size: 1.5em; text-align: center; display: block; }
+        .fav-star.active { color: #f1c40f; }
+
+        #red-sheet {
+            position: fixed;
+            top: 250px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 460px;
+            height: 600px;
+            background-color: var(--sheet-color);
+            border: 1px solid #900;
+            border-radius: 12px;
+            z-index: 9999;
+            touch-action: none;
+            cursor: move;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .mode-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: #34495e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10001;
+        }
+
+        #view-title { text-align: center; font-size: 1.3em; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<div class="sticky-header">
+    <div class="header-inner">
+        <div class="speed-panel">
+            <button class="stop-btn" id="stop-btn" onclick="toggleStop()">停止</button>
+            <button class="speed-control-btn" onclick="adjustSpeed(-0.5)">ー</button>
+            <div class="speed-display" id="speed-val">速度: 0.0</div>
+            <button class="speed-control-btn" onclick="adjustSpeed(0.5)">＋</button>
+        </div>
+        <div class="shuffle-panel">
+            <button class="shuffle-btn" id="shuffle-on" onclick="setShuffle(true)">🔀 シャッフル</button>
+            <button class="shuffle-btn active" id="shuffle-off" onclick="setShuffle(false)">📋 順番</button>
+        </div>
+        <div id="tabs" class="tabs">
+            <button class="tab-btn" style="border:2px solid #f1c40f;" id="btn-weak" onclick="showWeak()">🔥 苦手</button>
+        </div>
+    </div>
+</div>
+
+<div id="red-sheet"></div>
+
+<div class="container">
+    <h2 id="view-title">Section 16</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:15%;">苦手</th>
+                <th style="width:45%;">英単語</th>
+                <th style="width:40%;">意味</th>
+            </tr>
+        </thead>
+        <tbody id="word-list"></tbody>
+    </table>
+</div>
+
+<div class="mode-fab" onclick="document.body.classList.toggle('dark-mode')">🌓</div>
+
+<script>
+const sections = [
+    { name: "S16", full: "Section 16", words: [
+        {n:"1501", w:"bless", a:"恩恵を与える；感謝する"}, {n:"1502", w:"regain", a:"を取り戻す"}, {n:"1503", w:"conform", a:"順応する；一致する"}, {n:"1504", w:"enroll", a:"登録する；入会する"}, {n:"1505", w:"entitle", a:"に権利を与える；題名をつける"}, {n:"1506", w:"halt", a:"を止める；止まる"}, {n:"1507", w:"provoke", a:"を引き起こす；挑発する"}, {n:"1508", w:"invade", a:"を侵略する；侵害する"}, {n:"1509", w:"squeeze", a:"押し入る；搾る"}, {n:"1510", w:"crawl", a:"はう；ゆっくり進む"}, {n:"1511", w:"digest", a:"を消化する；理解する"}, {n:"1512", w:"utter", a:"を発する；述べる"}, {n:"1513", w:"refrain", a:"控える"}, {n:"1514", w:"populate", a:"に住む；人を住ませる"}, {n:"1515", w:"accommodate", a:"を収容する；適応させる"}, {n:"1516", w:"steer", a:"操縦する；に向ける"}, {n:"1517", w:"drown", a:"溺死する；水浸しにする"}, {n:"1518", w:"dip", a:"を浸す；突っ込む；下がる"}, {n:"1519", w:"soak", a:"を浸す；ずぶぬれにする"}, {n:"1520", w:"stir", a:"をかき回す；揺り動かす"}, {n:"1521", w:"transplant", a:"を移植する；移住させる"}, {n:"1522", w:"reassure", a:"を安心させる"}, {n:"1523", w:"resume", a:"を再開する；取り戻す"}, {n:"1524", w:"speculate", a:"と推測する；投機する"}, {n:"1525", w:"surpass", a:"を上回る"}, {n:"1526", w:"appoint", a:"を任命する；指定する"}, {n:"1527", w:"intrigue", a:"に興味を持たせる"}, {n:"1528", w:"decay", a:"腐敗する；衰える"}, {n:"1529", w:"contaminate", a:"を汚染する；堕落させる"}, {n:"1530", w:"swell", a:"膨張する；腫れる"}, {n:"1531", w:"delete", a:"を削除する，消す"}, {n:"1532", w:"tolerate", a:"を許容する，我慢する"}, {n:"1533", w:"envy", a:"をうらやむ"}, {n:"1534", w:"pray", a:"祈る"}, {n:"1535", w:"confess", a:"を告白する"}, {n:"1536", w:"resign", a:"を辞任する；放棄する"}, {n:"1537", w:"dissolve", a:"を溶かす；解散する"}, {n:"1538", w:"unfold", a:"開く；明らかにする"}, {n:"1539", w:"awaken", a:"を目覚めさせる"}, {n:"1540", w:"conceive", a:"思いつく；想像する"}, {n:"1541", w:"entrepreneur", a:"起業家，事業家"}, {n:"1542", w:"stake", a:"利害関係；賭け金；杭"}, {n:"1543", w:"surplus", a:"余剰，過剰；黒字"}, {n:"1544", w:"inflation", a:"インフレ；高騰"}, {n:"1545", w:"sweatshop", a:"搾取工場"}, {n:"1546", w:"clash", a:"衝突；対立"}, {n:"1547", w:"sociology", a:"社会学"}, {n:"1548", w:"ideology", a:"思想傾向"}, {n:"1549", w:"margin", a:"余白；差；利ざや"}, {n:"1550", w:"realm", a:"領域；領土"}, {n:"1551", w:"domain", a:"分野；領域"}, {n:"1552", w:"algorithm", a:"アルゴリズム"}, {n:"1553", w:"prairie", a:"大草原"}, {n:"1554", w:"frontier", a:"最先端；辺境地"}, {n:"1555", w:"bullet", a:"銃弾"}, {n:"1556", w:"shield", a:"盾，防御物"}, {n:"1557", w:"despair", a:"絶望"}, {n:"1558", w:"radiation", a:"放射能，放射線"}, {n:"1559", w:"placebo", a:"偽薬；気休め"}, {n:"1560", w:"nursery", a:"託児所；苗床"}, {n:"1561", w:"spouse", a:"配偶者"}, {n:"1562", w:"makeup", a:"構成；化粧品"}, {n:"1563", w:"mummy", a:"ミイラ；お母さん"}, {n:"1564", w:"flesh", a:"肉；果肉"}, {n:"1565", w:"limb", a:"手足"}, {n:"1566", w:"odor", a:"におい；気配"}, {n:"1567", w:"laundry", a:"洗濯（物）"}, {n:"1568", w:"tide", a:"潮；動向"}, {n:"1569", w:"questionnaire", a:"アンケート"}, {n:"1570", w:"nonsense", a:"ばかげた物；無意味"}, {n:"1571", w:"revenge", a:"復讐"}, {n:"1572", w:"intellect", a:"知性；知識人"}, {n:"1573", w:"hospitality", a:"歓待；もてなし"}, {n:"1574", w:"librarian", a:"司書"}, {n:"1575", w:"manuscript", a:"原稿；写本"}, {n:"1576", w:"obsession", a:"強迫観念；妄想"}, {n:"1577", w:"hygiene", a:"衛生；健康法"}, {n:"1578", w:"paradigm", a:"理論的枠組み"}, {n:"1579", w:"legitimate", a:"合法的な；妥当な"}, {n:"1580", w:"authentic", a:"本物の；信頼できる"}, {n:"1581", w:"empirical", a:"経験的な"}, {n:"1582", w:"immense", a:"膨大な"}, {n:"1583", w:"absurd", a:"ばかげた；不合理な"}, {n:"1584", w:"weird", a:"奇妙な；異様な"}, {n:"1585", w:"accidental", a:"偶然の；過失による"}, {n:"1586", w:"uneasy", a:"不安な；落ち着かない"}, {n:"1587", w:"jealous", a:"嫉妬深い"}, {n:"1588", w:"feminine", a:"女らしい"}, {n:"1589", w:"swift", a:"素早い"}, {n:"1590", w:"hollow", a:"空洞の；空虚な"}, {n:"1591", w:"crude", a:"大まかな；未精製の"}, {n:"1592", w:"sore", a:"痛い；腹が立って"}, {n:"1593", w:"pessimistic", a:"悲観的な"}, {n:"1594", w:"vain", a:"無駄な；うぬぼれた"}, {n:"1595", w:"susceptible", a:"影響を受けやすい"}, {n:"1596", w:"edible", a:"食用の"}, {n:"1597", w:"sheer", a:"純然たる；薄地の"}, {n:"1598", w:"explicit", a:"明白な；率直な"}, {n:"1599", w:"prone", a:"なりやすい；傾向がある"}, {n:"1600", w:"affluent", a:"裕福な；豊富な"}
+    ]},
+    { name: "S17", full: "Section 17", words: [
+        {n:"1601", w:"collaborate", a:"共同して働く"}, {n:"1602", w:"exert", a:"を及ぼす；行使する"}, {n:"1603", w:"excel", a:"秀でている；に勝る"}, {n:"1604", w:"prosper", a:"栄える；繁殖する"}, {n:"1605", w:"surge", a:"殺到する；急騰する"}, {n:"1606", w:"intervene", a:"介入する；介在する"}, {n:"1607", w:"insert", a:"を挿入する"}, {n:"1608", w:"overtake", a:"を追い抜く；襲う"}, {n:"1609", w:"snap", a:"を鳴らす；ポキッと折る"}, {n:"1610", w:"carve", a:"を彫る；切り開く"}, {n:"1611", w:"addict", a:"中毒になる；凝る"}, {n:"1612", w:"condemn", a:"を非難する；宣告される"}, {n:"1613", w:"convict", a:"に有罪を宣告する"}, {n:"1614", w:"dictate", a:"を指図する；規定する"}, {n:"1615", w:"prescribe", a:"を処方する；規定する"}, {n:"1616", w:"inhibit", a:"を抑制する；妨げる"}, {n:"1617", w:"stray", a:"はぐれる；道に迷う"}, {n:"1618", w:"roam", a:"歩き回る；放浪する"}, {n:"1619", w:"enclose", a:"を同封する；取り囲む"}, {n:"1620", w:"execute", a:"を実行する；処刑する"}, {n:"1621", w:"coincide", a:"同時に起こる；一致する"}, {n:"1622", w:"lag", a:"遅れる；徐々に弱まる"}, {n:"1623", w:"cling", a:"しがみつく；くっつく"}, {n:"1624", w:"erase", a:"を消す"}, {n:"1625", w:"grind", a:"（穀物など）をひく"}, {n:"1626", w:"knit", a:"を編む；結合する"}, {n:"1627", w:"inquire", a:"尋ねる"}, {n:"1628", w:"betray", a:"うっかり表す；裏切る"}, {n:"1629", w:"leak", a:"漏れる；を漏らす"}, {n:"1630", w:"smash", a:"を粉砕する；強打する"}, {n:"1631", w:"bounce", a:"跳ねる；反射する"}, {n:"1632", w:"sprawl", a:"不規則に広がる"}, {n:"1633", w:"converse", a:"会話をする"}, {n:"1634", w:"recite", a:"を暗唱する；詳述する"}, {n:"1635", w:"disregard", a:"を無視する；軽視する"}, {n:"1636", w:"frown", a:"眉をひそめる"}, {n:"1637", w:"evoke", a:"を呼び起こす"}, {n:"1638", w:"pledge", a:"を誓う；約束する"}, {n:"1639", w:"aspire", a:"熱望する"}, {n:"1640", w:"contemplate", a:"熟考する；予想する"}, {n:"1641", w:"grace", a:"優美；分別；恩寵"}, {n:"1642", w:"enlightenment", a:"啓蒙，啓発"}, {n:"1643", w:"commerce", a:"商業；貿易"}, {n:"1644", w:"draft", a:"下書き；隙間風"}, {n:"1645", w:"barrel", a:"バレル；たる"}, {n:"1646", w:"timber", a:"木材；樹木"}, {n:"1647", w:"garment", a:"衣服"}, {n:"1648", w:"thread", a:"糸；筋道"}, {n:"1649", w:"cabinet", a:"内閣；戸棚"}, {n:"1650", w:"bureau", a:"局；事務局"}, {n:"1651", w:"autonomy", a:"自律；自治（権）"}, {n:"1652", w:"toll", a:"損害；死傷者数；通行料"}, {n:"1653", w:"discourse", a:"話し合い；論説"}, {n:"1654", w:"superstition", a:"迷信"}, {n:"1655", w:"glimpse", a:"ちらりと見えること"}, {n:"1656", w:"arithmetic", a:"計算；算数"}, {n:"1657", w:"glossary", a:"用語集"}, {n:"1658", w:"archive", a:"記録文書；公文書"}, {n:"1659", w:"legacy", a:"遺産"}, {n:"1660", w:"anthropology", a:"人類学"}, {n:"1661", w:"rage", a:"激怒；猛威"}, {n:"1662", w:"sorrow", a:"悲しみ"}, {n:"1663", w:"psychiatrist", a:"精神科医"}, {n:"1664", w:"ward", a:"病棟；行政区"}, {n:"1665", w:"stall", a:"露店；失速"}, {n:"1666", w:"flame", a:"炎；情熱"}, {n:"1667", w:"moisture", a:"水分；湿気"}, {n:"1668", w:"irony", a:"皮肉"}, {n:"1669", w:"warrior", a:"戦士"}, {n:"1670", w:"astronomy", a:"天文学"}, {n:"1671", w:"probe", a:"宇宙探査機；精査"}, {n:"1672", w:"altitude", a:"高度，標高"}, {n:"1673", w:"tumor", a:"腫瘍；腫れ物"}, {n:"1674", w:"defect", a:"欠陥；不足"}, {n:"1675", w:"sanitation", a:"公衆衛生；下水設備"}, {n:"1676", w:"longevity", a:"長寿；寿命"}, {n:"1677", w:"scope", a:"範囲；余地"}, {n:"1678", w:"sentiment", a:"感情；感傷"}, {n:"1679", w:"plausible", a:"もっともらしい"}, {n:"1680", w:"vigorous", a:"精力的な；激しい"}, {n:"1681", w:"masculine", a:"男らしい"}, {n:"1682", w:"rigid", a:"厳しい；硬直した"}, {n:"1683", w:"adverse", a:"不都合な；逆の"}, {n:"1684", w:"coherent", a:"一貫した；結束した"}, {n:"1685", w:"literal", a:"文字どおりの；逐語的な"}, {n:"1686", w:"arbitrary", a:"恣意的な；独断的な"}, {n:"1687", w:"anonymous", a:"匿名の"}, {n:"1688", w:"antique", a:"骨董の；古風な"}, {n:"1689", w:"eternal", a:"永遠の；不変の"}, {n:"1690", w:"intermediate", a:"中級の；中間の"}, {n:"1691", w:"subordinate", a:"下位の；副次的な"}, {n:"1692", w:"gloomy", a:"陰気な；悲観的な"}, {n:"1693", w:"thermal", a:"熱の；保温用の"}, {n:"1694", w:"faint", a:"かすかな；めまいがする"}, {n:"1695", w:"naive", a:"お人よしの；純朴な"}, {n:"1696", w:"apt", a:"傾向がある；適切な"}, {n:"1697", w:"arrogant", a:"横柄な，傲慢な"}, {n:"1698", w:"extrovert", a:"外向的な；社交的な"}, {n:"1699", w:"conspicuous", a:"目立つ"}, {n:"1700", w:"intact", a:"損なわれていない"}
+    ]},
+    { name: "S18", full: "Section 18", words: [
+        {n:"1701", w:"embody", a:"を具現する；包含する"}, {n:"1702", w:"illuminate", a:"を照らす；解明する"}, {n:"1703", w:"console", a:"を慰める"}, {n:"1704", w:"verify", a:"正しさを証明する"}, {n:"1705", w:"disclose", a:"を公表する；暴く"}, {n:"1706", w:"stack", a:"を積む；渋滞する"}, {n:"1707", w:"rotate", a:"回転する；循環する"}, {n:"1708", w:"constrain", a:"強いる；抑える"}, {n:"1709", w:"hinder", a:"を妨げる"}, {n:"1710", w:"withstand", a:"に耐える"}, {n:"1711", w:"tweet", a:"ツイートする"}, {n:"1712", w:"sneeze", a:"くしゃみをする"}, {n:"1713", w:"erupt", a:"噴火する；勃発する"}, {n:"1714", w:"blur", a:"をぼかす；あいまいにする"}, {n:"1715", w:"overlap", a:"一部重なる；重複する"}, {n:"1716", w:"embed", a:"埋め込まれる"}, {n:"1717", w:"displace", a:"に取って代わる；移動させる"}, {n:"1718", w:"render", a:"にする；を与える"}, {n:"1719", w:"plunge", a:"突っ込む；没頭する"}, {n:"1720", w:"surrender", a:"を放棄する；屈する"}, {n:"1721", w:"plug", a:"プラグを差す；ふさぐ"}, {n:"1722", w:"suck", a:"吸う；しゃぶる"}, {n:"1723", w:"mock", a:"をばかにする；まねる"}, {n:"1724", w:"tease", a:"からかう；いじめる"}, {n:"1725", w:"soothe", a:"をなだめる；和らげる"}, {n:"1726", w:"stain", a:"を汚す；着色する"}, {n:"1727", w:"shun", a:"を避ける"}, {n:"1728", w:"stumble", a:"よろけ歩く；つまずく"}, {n:"1729", w:"flush", a:"紅潮させる；水で流す"}, {n:"1730", w:"impair", a:"を損なう"}, {n:"1731", w:"presume", a:"と思う；推定する"}, {n:"1732", w:"contend", a:"と主張する；競う"}, {n:"1733", w:"roar", a:"うなる；大笑いする"}, {n:"1734", w:"haunt", a:"つきまとう；に出る"}, {n:"1735", w:"divert", a:"そらす；転用する"}, {n:"1736", w:"await", a:"を待つ"}, {n:"1737", w:"fetch", a:"持って［連れて］くる"}, {n:"1738", w:"unify", a:"を統合する；統一される"}, {n:"1739", w:"inspect", a:"を点検する；視察する"}, {n:"1740", w:"entail", a:"を伴う；を含む"}, {n:"1741", w:"tactics", a:"作戦；戦術"}, {n:"1742", w:"feat", a:"偉業；功績"}, {n:"1743", w:"prestige", a:"名声"}, {n:"1744", w:"analogy", a:"類推；類似"}, {n:"1745", w:"conscience", a:"良心；分別"}, {n:"1746", w:"textile", a:"織物；繊維"}, {n:"1747", w:"deficit", a:"赤字；不足"}, {n:"1748", w:"plague", a:"疫病；異常発生"}, {n:"1749", w:"hazard", a:"危険要素；偶然"}, {n:"1750", w:"metabolism", a:"新陳代謝"}, {n:"1751", w:"paralysis", a:"麻痺"}, {n:"1752", w:"grid", a:"供給網；格子模様"}, {n:"1753", w:"carriage", a:"馬車；車両；振舞い"}, {n:"1754", w:"friction", a:"不和；摩擦"}, {n:"1755", w:"rebel", a:"反逆者"}, {n:"1756", w:"regime", a:"政権；体制"}, {n:"1757", w:"monopoly", a:"独占（権）"}, {n:"1758", w:"staple", a:"必需食品；主要産物"}, {n:"1759", w:"merchandise", a:"商品"}, {n:"1760", w:"vendor", a:"物売り；自動販売機"}, {n:"1761", w:"supervisor", a:"監督者；指導教員"}, {n:"1762", w:"predecessor", a:"前任者；前のもの"}, {n:"1763", w:"personnel", a:"職員，社員"}, {n:"1764", w:"vessel", a:"船舶；容器；脈管"}, {n:"1765", w:"liver", a:"肝臓"}, {n:"1766", w:"duration", a:"継続，持続時間"}, {n:"1767", w:"certificate", a:"証明書；免許状"}, {n:"1768", w:"geometry", a:"幾何学"}, {n:"1769", w:"symmetry", a:"対称；調和"}, {n:"1770", w:"biography", a:"伝記"}, {n:"1771", w:"masterpiece", a:"傑作"}, {n:"1772", w:"rhyme", a:"押韻詩；韻"}, {n:"1773", w:"premium", a:"保険料；景品"}, {n:"1774", w:"breakdown", a:"崩壊；衰弱；故障"}, {n:"1775", w:"courtesy", a:"礼儀正しさ；優遇"}, {n:"1776", w:"protocol", a:"議定書；外交儀礼"}, {n:"1777", w:"specimen", a:"標本；実例"}, {n:"1778", w:"thesis", a:"論文；命題"}, {n:"1779", w:"eligible", a:"適格の；資格のある"}, {n:"1780", w:"intrinsic", a:"固有の，本質的な"}, {n:"1781", w:"diligent", a:"勤勉な；入念な"}, {n:"1782", w:"vocational", a:"職業の，訓練用の"}, {n:"1783", w:"bankrupt", a:"破産した；破綻した"}, {n:"1784", w:"stern", a:"厳しい；いかめしい"}, {n:"1785", w:"stubborn", a:"頑固な；手に負えない"}, {n:"1786", w:"maternal", a:"母の，母親らしい"}, {n:"1787", w:"fertile", a:"肥沃な；多産の"}, {n:"1788", w:"ripe", a:"熟した；成熟した"}, {n:"1789", w:"stiff", a:"硬直した；堅い"}, {n:"1790", w:"obsolete", a:"廃れた；古くなった"}, {n:"1791", w:"vacant", a:"空いている"}, {n:"1792", w:"acoustic", a:"音響の；聴覚の"}, {n:"1793", w:"preliminary", a:"予備の，準備の"}, {n:"1794", w:"approximate", a:"おおよその"}, {n:"1795", w:"implicit", a:"暗黙の；内在する"}, {n:"1796", w:"punctual", a:"時間を守る"}, {n:"1797", w:"compatible", a:"互換性のある；矛盾しない"}, {n:"1798", w:"ample", a:"十分すぎるほどの"}, {n:"1799", w:"pervasive", a:"隅々に広がった"}, {n:"1800", w:"ubiquitous", a:"至る所にある"}
+    ]},
+    { name: "S19", full: "Section 19", words: [
+        {n:"1801", w:"deduce", a:"を推測する"}, {n:"1802", w:"simulate", a:"を模擬実験する；装う"}, {n:"1803", w:"merge", a:"合併する；融合させる"}, {n:"1804", w:"penetrate", a:"浸透する；見抜く"}, {n:"1805", w:"cater", a:"料理をまかなう；応える"}, {n:"1806", w:"assault", a:"に暴行する；攻撃する"}, {n:"1807", w:"torture", a:"を拷問にかける"}, {n:"1808", w:"bleed", a:"出血する"}, {n:"1809", w:"erect", a:"を建てる；直立させる"}, {n:"1810", w:"cherish", a:"を大切にする；心に抱く"}, {n:"1811", w:"arouse", a:"を引き起こす；目覚めさせる"}, {n:"1812", w:"doom", a:"運命にある"}, {n:"1813", w:"mourn", a:"悼む；嘆く"}, {n:"1814", w:"dread", a:"をひどく恐れる"}, {n:"1815", w:"nourish", a:"に栄養を与える"}, {n:"1816", w:"inject", a:"注射する；注入する"}, {n:"1817", w:"swear", a:"ののしる；誓う"}, {n:"1818", w:"bid", a:"値をつける；挨拶を述べる"}, {n:"1819", w:"corrupt", a:"を堕落させる；買収する"}, {n:"1820", w:"preoccupy", a:"の心を奪う"}, {n:"1821", w:"browse", a:"拾い読みする；閲覧する"}, {n:"1822", w:"compile", a:"を編集する；まとめる"}, {n:"1823", w:"allocate", a:"を割り当てる，分配する"}, {n:"1824", w:"offset", a:"を相殺する；埋め合わせる"}, {n:"1825", w:"restrain", a:"を制止する；規制する"}, {n:"1826", w:"comply", a:"従う，応じる"}, {n:"1827", w:"expire", a:"期限が切れる"}, {n:"1828", w:"embark", a:"乗り出す；乗船する"}, {n:"1829", w:"flap", a:"パタパタ動く；羽ばたく"}, {n:"1830", w:"furnish", a:"に備えつける"}, {n:"1831", w:"forge", a:"偽造する；築く；鍛造する"}, {n:"1832", w:"thrust", a:"押しつける；突き刺す"}, {n:"1833", w:"dispatch", a:"派遣する；発送する"}, {n:"1834", w:"resent", a:"に憤慨する"}, {n:"1835", w:"reconcile", a:"一致させる；和解させる"}, {n:"1836", w:"allege", a:"を主張する"}, {n:"1837", w:"oppress", a:"を抑圧する；悩ませる"}, {n:"1838", w:"expel", a:"を追放する；吐き出す"}, {n:"1839", w:"ascend", a:"上がる"}, {n:"1840", w:"commence", a:"始まる；開始する"}, {n:"1841", w:"advent", a:"出現，到来"}, {n:"1842", w:"reign", a:"治世；統治"}, {n:"1843", w:"diplomacy", a:"外交（的手腕）"}, {n:"1844", w:"embassy", a:"大使館；大使一行"}, {n:"1845", w:"exile", a:"亡命（者）；追放"}, {n:"1846", w:"refuge", a:"避難（所）；保護"}, {n:"1847", w:"plight", a:"窮状；（悪い）状態"}, {n:"1848", w:"solitude", a:"ひとりでいること"}, {n:"1849", w:"fallacy", a:"誤った考え；錯誤"}, {n:"1850", w:"latitude", a:"緯度；許容範囲"}, {n:"1851", w:"eclipse", a:"食；失墜"}, {n:"1852", w:"basin", a:"流域；盆地；洗面器"}, {n:"1853", w:"erosion", a:"浸食；衰退"}, {n:"1854", w:"archaeology", a:"考古学"}, {n:"1855", w:"errand", a:"使い，用件"}, {n:"1856", w:"mercy", a:"慈悲；幸運"}, {n:"1857", w:"rhetoric", a:"修辞（法）；美辞麗句"}, {n:"1858", w:"verse", a:"韻文；詩"}, {n:"1859", w:"congestion", a:"混雑"}, {n:"1860", w:"sewage", a:"下水"}, {n:"1861", w:"complement", a:"補完物；補語"}, {n:"1862", w:"subsidy", a:"補助金；報奨金"}, {n:"1863", w:"mortgage", a:"住宅ローン；抵当"}, {n:"1864", w:"attorney", a:"弁護士；代理人"}, {n:"1865", w:"outfit", a:"衣装一式；装備一式"}, {n:"1866", w:"bulk", a:"大半；大きさ；大量"}, {n:"1867", w:"reunion", a:"再会；再結合"}, {n:"1868", w:"synthesis", a:"合成；総合"}, {n:"1869", w:"mold", a:"鋳型；性格；かび"}, {n:"1870", w:"thirst", a:"渇き；渇望"}, {n:"1871", w:"greed", a:"強欲"}, {n:"1872", w:"bribe", a:"賄賂"}, {n:"1873", w:"contempt", a:"軽蔑；恥辱"}, {n:"1874", w:"texture", a:"感触；本質；質感"}, {n:"1875", w:"orphan", a:"孤児"}, {n:"1876", w:"harassment", a:"嫌がらせ"}, {n:"1877", w:"hay", a:"干し草"}, {n:"1878", w:"doctrine", a:"教義；主義"}, {n:"1879", w:"holistic", a:"全体論の；ホリスティック"}, {n:"1880", w:"liable", a:"しがちな；責任がある"}, {n:"1881", w:"earnest", a:"まじめな，熱心な"}, {n:"1882", w:"intelligible", a:"理解できる"}, {n:"1883", w:"abrupt", a:"突然の"}, {n:"1884", w:"reckless", a:"無謀な；顧みない"}, {n:"1885", w:"furious", a:"激怒した；猛烈な"}, {n:"1886", w:"eloquent", a:"雄弁な；説得力のある"}, {n:"1887", w:"juvenile", a:"青少年の"}, {n:"1888", w:"notorious", a:"悪名高い"}, {n:"1889", w:"timid", a:"臆病な；内気な"}, {n:"1890", w:"humid", a:"湿気のある"}, {n:"1891", w:"contagious", a:"感染（性）の"}, {n:"1892", w:"cynical", a:"冷笑的な，皮肉な"}, {n:"1893", w:"dumb", a:"ばかげた；無言の"}, {n:"1894", w:"monotonous", a:"単調な"}, {n:"1895", w:"perpetual", a:"永続的な；ひっきりなし"}, {n:"1896", w:"dizzy", a:"目まいがする；当惑した"}, {n:"1897", w:"weary", a:"疲れ果てた；うんざりした"}, {n:"1898", w:"numb", a:"無感覚な；ぼう然とした"}, {n:"1899", w:"mortal", a:"致命的な；死すべき運命"}, {n:"1900", w:"zealous", a:"熱心な；熱狂的な"}
+    ]}
+];
+
+let currentIdx = 0; 
+let weakWords = JSON.parse(localStorage.getItem('weakWords_S16_19') || '[]');
+let isShuffle = false;
+let scrollInterval = null;
+let currentSpeed = 0.0;
+
+const tabsContainer = document.getElementById('tabs');
+sections.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    btn.innerText = s.name;
+    btn.onclick = () => { currentIdx = i; updateView(); };
+    tabsContainer.appendChild(btn);
+});
+
+window.onscroll = function() { updateProgressBar(); };
+
+function updateProgressBar() {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById("progress-bar").style.width = (height <= 0 ? 0 : scrolled) + "%";
+}
+
+function setShuffle(val) {
+    isShuffle = val;
+    document.getElementById('shuffle-on').classList.toggle('active', isShuffle);
+    document.getElementById('shuffle-off').classList.toggle('active', !isShuffle);
+    updateView();
+}
+
+function updateView() {
+    const title = document.getElementById('view-title');
+    const list = document.getElementById('word-list');
+    const btns = document.querySelectorAll('.tab-btn');
+    
+    btns.forEach((b, i) => {
+        if (i === 0) return; 
+        b.classList.toggle('active', currentIdx === i - 1);
+    });
+    document.getElementById('btn-weak').classList.toggle('active', currentIdx === -1);
+    
+    list.innerHTML = '';
+    let targetWords = (currentIdx === -1) ? [...weakWords] : [...sections[currentIdx].words];
+    title.innerText = (currentIdx === -1) ? "🔥 苦手な単語" : sections[currentIdx].full;
+
+    if (targetWords.length === 0) {
+        list.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:100px;">データがありません。</td></tr>';
+        document.getElementById("progress-bar").style.width = "0%";
+        return;
+    }
+
+    if (isShuffle) {
+        for (let i = targetWords.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [targetWords[i], targetWords[j]] = [targetWords[j], targetWords[i]];
+        }
+    }
+
+    targetWords.forEach((w) => {
+        const tr = document.createElement('tr');
+        const isW = weakWords.some(x => x.w === w.w);
+        tr.innerHTML = `
+            <td><span class="fav-star ${isW ? 'active' : ''}" onclick="toggleWeak('${w.w}', '${w.a}', '${w.n}', this)">★</span></td>
+            <td class="word-eng" onclick="speak('${w.w}')">
+                <span class="word-no">${w.n}.</span>${w.w}
+            </td>
+            <td><span class="word-jp">${w.a}</span></td>
+        `;
+        list.appendChild(tr);
+    });
+    stopScroll();
+    window.scrollTo(0, 0);
+    setTimeout(updateProgressBar, 100);
+}
+
+function toggleWeak(w, a, n, el) {
+    const idx = weakWords.findIndex(x => x.w === w);
+    if (idx > -1) { weakWords.splice(idx, 1); el.classList.remove('active'); }
+    else { weakWords.push({w, a, n}); el.classList.add('active'); }
+    localStorage.setItem('weakWords_S16_19', JSON.stringify(weakWords));
+    if (currentIdx === -1) updateView();
+}
+
+function showWeak() { currentIdx = -1; updateView(); }
+
+function adjustSpeed(delta) {
+    currentSpeed = Math.max(0, currentSpeed + delta);
+    updateSpeedUI();
+    startScrolling();
+}
+
+function toggleStop() {
+    currentSpeed = 0;
+    updateSpeedUI();
+    clearInterval(scrollInterval);
+}
+
+function updateSpeedUI() {
+    document.getElementById('speed-val').innerText = `速度: ${currentSpeed.toFixed(1)}`;
+    document.getElementById('stop-btn').classList.toggle('active', currentSpeed === 0);
+}
+
+function startScrolling() {
+    clearInterval(scrollInterval);
+    if (currentSpeed <= 0) return;
+    scrollInterval = setInterval(() => { window.scrollBy(0, 1); }, 50 / currentSpeed);
+}
+
+function stopScroll() {
+    currentSpeed = 0;
+    updateSpeedUI();
+    clearInterval(scrollInterval);
+}
+
+function speak(t) {
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'en-US';
+    speechSynthesis.speak(u);
+}
+
+const sheet = document.getElementById('red-sheet');
+let isDragging = false, offset = {x:0, y:0};
+
+function loadSheetPosition() {
+    const savedPos = localStorage.getItem('redSheetPos_S16_19');
+    if (savedPos) {
+        const { top, left } = JSON.parse(savedPos);
+        sheet.style.top = top;
+        sheet.style.left = left;
+        sheet.style.transform = 'none';
+    }
+}
+
+const moveStart = (e) => {
+    isDragging = true;
+    const p = e.touches ? e.touches[0] : e;
+    const r = sheet.getBoundingClientRect();
+    offset.x = p.clientX - r.left;
+    offset.y = p.clientY - r.top;
+    sheet.style.transform = 'none';
+};
+
+const move = (e) => {
+    if (!isDragging) return;
+    const p = e.touches ? e.touches[0] : e;
+    sheet.style.top = (p.clientY - offset.y) + 'px';
+    sheet.style.left = (p.clientX - offset.x) + 'px';
+};
+
+const moveEnd = () => {
+    if (isDragging) {
+        isDragging = false;
+        localStorage.setItem('redSheetPos_S16_19', JSON.stringify({
+            top: sheet.style.top,
+            left: sheet.style.left
+        }));
+    }
+};
+
+sheet.addEventListener('mousedown', moveStart);
+sheet.addEventListener('touchstart', moveStart, {passive: false});
+window.addEventListener('mousemove', move);
+window.addEventListener('touchmove', (e) => {
+    if (isDragging) e.preventDefault();
+    move(e);
+}, {passive: false});
+window.addEventListener('mouseup', moveEnd);
+window.addEventListener('touchend', moveEnd);
+
+loadSheetPosition();
+updateView();
+</script>
+</body>
+</html>
